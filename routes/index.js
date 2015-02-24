@@ -7,13 +7,15 @@ var _str = require('underscore.string');
 
 router.get('/', function(req, res, next) {
   var models = [];
-    mongoose.modelNames().forEach(function(val,index) {
-      models.push({slug: mongoose.models[val].slug() , displayName: mongoose.models[val].displayName()})
+
+  mongoose.modelNames().forEach(function(val,index) {
+    models.push({slug: mongoose.models[val].slug() , displayName: mongoose.models[val].displayName()})
   })
-    res.render(req.baseUrl.substr(1), {
-      "baseUrl": req.baseUrl,
-      "collections" : models
-    });
+
+  res.render(req.baseUrl.substr(1), {
+    "baseUrl": req.baseUrl,
+    "collections" : models
+  });
 });
 
 router.get('/create', function(req,res,next) {
@@ -23,30 +25,33 @@ router.get('/create', function(req,res,next) {
 router.post('/create', function(req,res,next){
 
   req.body.name = _str.capitalize(req.body.name);
-  //The new base collection
 
   //Define schema for this new type
-    createModel(req.body.name, res,
-        updateSchema(req.body.name, res, {},
-          function() {
-            require(findModelFilePath(req.body.name));
-            models = require(__base + 'models');
-            res.writeHead(301, {
-              Location: (req.socket.encrypted ? 'https://' : 'http://') +
-              req.headers.host + req.baseUrl + '/' + req.body.name
-            });
-            res.end();
-          }))
-  })
+  createModel(req.body.name, res,
+    updateSchema(req.body.name, res, {},
+      function() {
+        require(findModelFilePath(req.body.name));
+        models = require(__base + 'models');
+        res.writeHead(301, {
+          Location: (req.socket.encrypted ? 'https://' : 'http://') +
+          req.headers.host + req.baseUrl + '/' + req.body.name
+        });
+        res.end();
+      }
+    )
+  )
+})
 
 
 router.post('/:collection', function(req,res,next) {
   var Model = getModel(req.params.collection);
+
   Model.create({'title': 'Jordan'});
 })
 
 router.get('/:collection', function(req, res, next) {
   var collection = getModel(req.params.collection)
+
   collection.find({},{},function(error,collection){
     res.render(req.baseUrl.substr(1) + "collection", {
       "collection" : collection,
@@ -58,10 +63,12 @@ router.get('/:collection', function(req, res, next) {
 router.get('/:collection/schema', function(req, res, next) {
   var paths = mongoose.models[req.params.collection].schema.paths
   var fields = [];
+
   for (p in paths) {
     var name = paths[p].path;
     fields.push({title: paths[p].path, type: paths[p].instance })
   }
+
   res.render(req.baseUrl.substr(1) + "collection_schema", {
       "collection" : fields
   });
@@ -69,34 +76,37 @@ router.get('/:collection/schema', function(req, res, next) {
 
 router.delete('/:collection', function(req,res,next) {
   var collection = _str.capitalize(req.params.collection);
-
   var filePath = findModelFilePath(collection);
+
   fs.unlink(filePath,
-      function(err) {
-        removeModel(collection);
-        if(err) {
-          res.end();
-        }
-        else {
-          res.end(JSON.stringify({"success" : true, "status" : 200}));
-        }
-      });
+    function(err) {
+      removeModel(collection);
+      if(err) {
+        res.end();
+      }
+      else {
+        res.end(JSON.stringify({"success" : true, "status" : 200}));
+      }
+    }
+  );
 })
 
 router.get('/:collection/:id', function(req, res, next) {
   var model = getModel(req.params.collection);
-    model.findById(req.params.id,function(error,item){
-      console.log(model.schema.tree);
-      var fields = [];
-      var paths = model.schema.paths;
-      for (p in paths) {
-        fields.push({name: paths[p].path,required: paths[p].isRequired, type: paths[p].instance})
-      }
-      res.render(req.baseUrl.substr(1) + "item_view", {
-        "schema": fields,
-        "item" : item
-      });
+
+  model.findById(req.params.id,function(error,item){
+    var fields = [];
+    var paths = model.schema.paths;
+
+    for (p in paths) {
+      fields.push({name: paths[p].path,required: paths[p].isRequired, type: paths[p].instance})
+    }
+
+    res.render(req.baseUrl.substr(1) + "item_view", {
+      "schema": fields,
+      "item" : item
     });
+  });
 });
 
 router.post('/:collection/schema', function(req,res,next) {
@@ -104,10 +114,11 @@ router.post('/:collection/schema', function(req,res,next) {
   var collectionName = req.params.collection;
   var schema = require(findModelFilePath( collectionName + "_Schema"));
   var newItem = {};
+
   for (item in req.body) {
     newItem[item] = req.body[item];
-
   }
+
   schema[newItem['name']] = newItem;
 
   res.render('model_template_schema',{schema: schema}, function(err, html) {
@@ -163,19 +174,22 @@ createModel = function(collectionName, res, callback) {
     modelName: displayName,
     modelNameSlug: slugName,
     modelNameDisplayName: displayName
-  }, function (err, html) {
+  },
+    function (err, html) {
     fs.writeFile("models/" + collectionName + ".js",
-        function () {
-          return html;
-        }(), function (err) {
-          if (err) {
-            console.log(err);
-          }
-          else {
-            if (typeof callback == "function")
-              callback();
-          }
-        })
+      function () {
+        return html;
+      }(),
+      function (err) {
+        if (err) {
+          console.log(err);
+        }
+        else {
+          if (typeof callback == "function")
+          callback();
+        }
+      }
+    )
   })
 }
 
@@ -186,7 +200,8 @@ updateSchema = function( collectionName, res, schema, callback) {
     fs.writeFile("models/" + collectionName + "_schema.js",
       function() {
         return html;
-      }(), function (err)
+      }(),
+      function (err)
       {
         if (err) {
           console.log(err)
@@ -194,7 +209,8 @@ updateSchema = function( collectionName, res, schema, callback) {
         else {
           callback();
         }
-      })
+      }
+    )
   })
 }
 
