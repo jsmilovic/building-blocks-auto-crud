@@ -27,7 +27,7 @@ router.post('/create', function(req,res,next){
 
   //Define schema for this new type
     createModel(req.body.name, res,
-        createSchema(req.body.name, res,
+        updateSchema(req.body.name, res, {},
           function() {
             require(findModelFilePath(req.body.name));
             models = require(__base + 'models');
@@ -180,9 +180,9 @@ createModel = function(collectionName, res, callback) {
 }
 
 //Please refactor!! =p
-createSchema = function( collectionName, res, callback) {
+updateSchema = function( collectionName, res, schema, callback) {
 
-  res.render('model_template_schema',{schema: {} }, function(err, html) {
+  res.render('model_template_schema',{schema: schema }, function(err, html) {
     fs.writeFile("models/" + collectionName + "_schema.js",
       function() {
         return html;
