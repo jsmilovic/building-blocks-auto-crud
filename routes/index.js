@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var models = require(__base + 'models');
 var fs = require('fs');
-var mongoose = require('mongoose')
+var mongoose = require('mongoose');
 var _str = require('underscore.string');
 
 router.get('/', function(req, res, next) {
@@ -50,7 +50,7 @@ router.post('/:collection', function(req,res,next) {
 })
 
 router.get('/:collection', function(req, res, next) {
-  var collection = getModel(req.params.collection)
+  var collection = getModel(req.params.collection);
 
   collection.find({},{},function(error,collection){
     res.render(req.baseUrl.substr(1) + "collection", {
@@ -61,7 +61,7 @@ router.get('/:collection', function(req, res, next) {
 });
 
 router.get('/:collection/schema', function(req, res, next) {
-  var paths = mongoose.models[req.params.collection].schema.paths
+  var paths = mongoose.models[req.params.collection].schema.paths;
   var fields = [];
 
   for (p in paths) {
@@ -99,7 +99,7 @@ router.get('/:collection/:id', function(req, res, next) {
   model.findById(req.params.id,function(error,item){
 
     for (p in paths) {
-      fields.push({name: paths[p].path,required: paths[p].isRequired, type: paths[p].instance})
+      fields.push({name: paths[p].path,required: paths[p].isRequired, type: paths[p].instance});
     }
 
     res.render(req.baseUrl.substr(1) + "item_view", {
@@ -122,21 +122,22 @@ router.post('/:collection/schema', function(req,res,next) {
   schema[newItem['name']] = newItem;
   res.render('model_template_schema',{schema: schema}, function(err, html) {
     fs.writeFile("models/" + collectionName + "_Schema.js",
-        function() {
-          return html;
-        }(), function (err) {
-          if (err) {
-            console.log(err)
-          }
-          else {
-            delete require.cache[require.resolve(findModelFilePath(collectionName))];
-            removeModel(collectionName);
-            require(findModelFilePath(collectionName));
-            models = require(__base + 'models');
-            res.end();
-          }
-        })
-
+      function() {
+        return html;
+      }(),
+      function (err) {
+        if (err) {
+          console.log(err);
+        }
+        else {
+          delete require.cache[require.resolve(findModelFilePath(collectionName))];
+          removeModel(collectionName);
+          require(findModelFilePath(collectionName));
+          models = require(__base + 'models');
+          res.end();
+        }
+      }
+    )
   })
 
 
@@ -148,20 +149,16 @@ router.delete('/:collection/schema/:objectId', function(req,res,next) {
 
 })
 
-router.get('/*', function(req, res, next) {
-  console.log(models[req.url.substr(1)]);
-});
-
 getModel = function(modelName) {
   return mongoose.model(modelName);
 }
 
 findModelFilePath = function(modelName) {
-  return __base + 'models/' + modelName + '.js'
+  return __base + 'models/' + modelName + '.js';
 }
 
 findModelSchemaFilePath = function(modelName) {
-  return __base + 'models/' + modelName + '_Schema.js'
+  return __base + 'models/' + modelName + '_Schema.js';
 }
 
 createModel = function(collectionName, res, callback) {
@@ -185,7 +182,7 @@ createModel = function(collectionName, res, callback) {
         }
         else {
           if (typeof callback == "function")
-          callback();
+            callback();
         }
       }
     )
@@ -203,7 +200,7 @@ updateSchema = function( collectionName, res, schema, callback) {
       function (err)
       {
         if (err) {
-          console.log(err)
+          console.log(err);
         }
         else {
           callback();
