@@ -26,16 +26,19 @@ router.post('/create', function(req,res,next){
   //The new base collection
 
   //Define schema for this new type
-    createSchema(req.body.name, res, function() {
-      require(findModelFilePath(req.body.name));
-      models = require(__base + 'models');
-      res.writeHead(301, {
-        Location: (req.socket.encrypted ? 'https://' : 'http://') +
-        req.headers.host + req.baseUrl + '/' + req.body.name
-      });
-      res.end();
-    })
-})
+    createModel(req.body.name, res,
+        createSchema(req.body.name, res,
+          function() {
+            require(findModelFilePath(req.body.name));
+            models = require(__base + 'models');
+            res.writeHead(301, {
+              Location: (req.socket.encrypted ? 'https://' : 'http://') +
+              req.headers.host + req.baseUrl + '/' + req.body.name
+            });
+            res.end();
+          }))
+  })
+
 
 router.post('/:collection', function(req,res,next) {
   var Model = getModel(req.params.collection);
@@ -151,35 +154,47 @@ findModelSchemaFilePath = function(modelName) {
   return __base + 'models/' + modelName + '_Schema.js'
 }
 
-//Please refactor!! =p
-createSchema = function( collectionName, res, callback) {
+createModel = function(collectionName, res, callback) {
+
   var displayName = collectionName;
   var slugName = _str.slugify(collectionName);
 
-  res.render('model_template',{modelName: displayName, modelNameSlug: slugName, modelNameDisplayName: displayName}, function(err, html) {
+  res.render('model_template', {
+    modelName: displayName,
+    modelNameSlug: slugName,
+    modelNameDisplayName: displayName
+  }, function (err, html) {
     fs.writeFile("models/" + collectionName + ".js",
-        function() {
+        function () {
           return html;
-        }(), function(err) {
-          if(err) {
+        }(), function (err) {
+          if (err) {
             console.log(err);
-          } else {
-            res.render('model_template_schema',{schema: {} }, function(err, html) {
-              fs.writeFile("models/" + collectionName + "_schema.js",
-                  function() {
-                    return html;
-                  }(), function (err) {
-                    if (err) {
-                      console.log(err)
-                    }
-                    else {
-                      callback();
-                    }
-                  })
+          }
+          else {
+            if (typeof callback == "function")
+              callback();
+          }
+        })
+  })
+}
 
-            })
-            }
-        });
+//Please refactor!! =p
+createSchema = function( collectionName, res, callback) {
+
+  res.render('model_template_schema',{schema: {} }, function(err, html) {
+    fs.writeFile("models/" + collectionName + "_schema.js",
+      function() {
+        return html;
+      }(), function (err)
+      {
+        if (err) {
+          console.log(err)
+        }
+        else {
+          callback();
+        }
+      })
   })
 }
 
