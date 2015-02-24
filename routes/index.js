@@ -93,10 +93,10 @@ router.delete('/:collection', function(req,res,next) {
 
 router.get('/:collection/:id', function(req, res, next) {
   var model = getModel(req.params.collection);
+  var fields = [];
+  var paths = model.schema.paths;
 
   model.findById(req.params.id,function(error,item){
-    var fields = [];
-    var paths = model.schema.paths;
 
     for (p in paths) {
       fields.push({name: paths[p].path,required: paths[p].isRequired, type: paths[p].instance})
@@ -120,7 +120,6 @@ router.post('/:collection/schema', function(req,res,next) {
   }
 
   schema[newItem['name']] = newItem;
-
   res.render('model_template_schema',{schema: schema}, function(err, html) {
     fs.writeFile("models/" + collectionName + "_Schema.js",
         function() {
