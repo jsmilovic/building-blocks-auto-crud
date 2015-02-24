@@ -1,0 +1,8 @@
+extends layout
+block content
+    ul.header-menu
+        each collection in collections
+            li
+                a(href=baseUrl + collection.slug)=collection.displayName
+
+    a(href=baseUrl + "/create") Create New

@@ -1,0 +1,10 @@
+extends layout
+block content
+    a(href= baseUrl + '/schema') View Schema
+    each item in collection
+        li
+            a(href= baseUrl + '/' + item._id)=item.title
+
+    form(method="delete", action=baseUrl)
+        button(typ="submit")
+            | delete

@@ -1,0 +1,9 @@
+extends layout
+block content
+    form(action='create',method='post')
+        label(for="name")
+            input(type="text", id="name", name="name")
+            | Name
+        br
+        br
+        input(type="submit", value="Create")

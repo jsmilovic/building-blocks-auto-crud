@@ -1,0 +1,13 @@
+| var fs = require('fs');
+| var mongoose = require('mongoose');
+| var Schema = mongoose.Schema;
+| var schema = new Schema(require('./#{modelName}_Schema'))
+| schema.statics.slug = function(cb) {
+| return '#{modelNameSlug}'
+| }
+
+| schema.statics.displayName = function(cb) {
+| return '#{modelNameDisplayName}'
+| }
+
+| module.exports = mongoose.model('#{modelName}',schema);
