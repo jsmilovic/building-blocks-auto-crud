@@ -72,7 +72,9 @@ router.get('/:collection/:id', function(req, res, next) {
 router.post('/:collection', function(req,res,next) {
   var Model = controller.getModel(req.params.collection);
 
-  Model.create({'title': 'Jordan'});
+  Model.create({'title': 'Jordan'}, function (err) {
+    console.log('hi')
+  });
 })
 
 router.delete('/:collection', function(req,res,next) {
@@ -92,8 +94,7 @@ router.delete('/:collection', function(req,res,next) {
 })
 
 router.delete('/:collection/:id', function(req, res, next) {
-  var Model = controller.getModel(req.params.collection);
-  Model.remove({ _id: req.params.id}, function(err) {
+  controller.deleteRecord(req.params.collection, req.params.id, function(err) {
     if (err)
     {
       res.end(JSON.stringify({"success": false, "status": 200}));
@@ -103,7 +104,6 @@ router.delete('/:collection/:id', function(req, res, next) {
       res.end(JSON.stringify({"success": true, "status": 200}));
     }
   })
-
 })
 
 router.get('/:collection/schema', function(req, res, next) {

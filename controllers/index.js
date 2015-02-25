@@ -103,3 +103,7 @@ var deleteModel = module.exports.deleteModel = function(modelName, cb) {
         }
     })
 }
+var deleteRecord = module.exports.deleteRecord = function(modelName, id, cb) {
+    var Model = getModel(modelName);
+    Model.remove({ _id: id}, cb)
+}
