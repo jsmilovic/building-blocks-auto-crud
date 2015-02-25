@@ -4,6 +4,7 @@ var models = require(__base + 'models');
 var fs = require('fs');
 var mongoose = require('mongoose');
 var _str = require('underscore.string');
+var controller = require ('../controllers');
 
 router.get('/', function(req, res, next) {
   var models = [];
@@ -27,10 +28,10 @@ router.post('/create', function(req,res,next){
   req.body.name = _str.capitalize(req.body.name);
 
   //Define schema for this new type
-  createModel(req.body.name, res,
-    updateSchema(req.body.name, res, {},
+  controller.createModel(req.body.name, res,
+      controller.updateSchema(req.body.name, res, {},
       function() {
-        require(findModelFilePath(req.body.name));
+        require(controller.findModelFilePath(req.body.name));
         models = require(__base + 'models');
         res.writeHead(301, {
           Location: (req.socket.encrypted ? 'https://' : 'http://') +
@@ -43,13 +44,13 @@ router.post('/create', function(req,res,next){
 })
 
 router.post('/:collection', function(req,res,next) {
-  var Model = getModel(req.params.collection);
+  var Model = controller.getModel(req.params.collection);
 
   Model.create({'title': 'Jordan'});
 })
 
 router.get('/:collection', function(req, res, next) {
-  var collection = getModel(req.params.collection);
+  var collection = controller.getModel(req.params.collection);
 
   collection.find({},{},function(error,collection){
     res.render(req.baseUrl.substr(1) + "collection", {
@@ -75,11 +76,11 @@ router.get('/:collection/schema', function(req, res, next) {
 
 router.delete('/:collection', function(req,res,next) {
   var collection = _str.capitalize(req.params.collection);
-  var filePath = findModelFilePath(collection);
+  var filePath = controller.findModelFilePath(collection);
 
   fs.unlink(filePath,
     function(err) {
-      removeModel(collection);
+      controller.removeModel(collection);
       if(err) {
         res.end();
       }
@@ -91,7 +92,7 @@ router.delete('/:collection', function(req,res,next) {
 })
 
 router.get('/:collection/:id', function(req, res, next) {
-  var model = getModel(req.params.collection);
+  var model = controller.getModel(req.params.collection);
   var fields = [];
   var paths = model.schema.paths;
 
@@ -111,7 +112,7 @@ router.get('/:collection/:id', function(req, res, next) {
 router.post('/:collection/schema', function(req,res,next) {
 
   var collectionName = req.params.collection;
-  var schema = require(findModelFilePath( collectionName + "_Schema"));
+  var schema = require(controller.findModelFilePath( collectionName + "_Schema"));
   var newItem = {};
 
   for (item in req.body) {
@@ -129,9 +130,9 @@ router.post('/:collection/schema', function(req,res,next) {
           console.log(err);
         }
         else {
-          delete require.cache[require.resolve(findModelFilePath(collectionName))];
-          removeModel(collectionName);
-          require(findModelFilePath(collectionName));
+          delete require.cache[require.resolve(controller.findModelFilePath(collectionName))];
+          controller.removeModel(collectionName);
+          require(controller.findModelFilePath(collectionName));
           models = require(__base + 'models');
           res.end();
         }
@@ -144,75 +145,9 @@ router.post('/:collection/schema', function(req,res,next) {
 
 router.delete('/:collection/schema/:objectId', function(req,res,next) {
 
-  findModelSchemaFilePath(req.params.collection);
+  controller.findModelSchemaFilePath(req.params.collection);
 
 })
 
-getModel = function(modelName) {
-  return mongoose.model(modelName);
-}
-
-findModelFilePath = function(modelName) {
-  return __base + 'models/' + modelName + '.js';
-}
-
-findModelSchemaFilePath = function(modelName) {
-  return __base + 'models/' + modelName + '_Schema.js';
-}
-
-createModel = function(collectionName, res, callback) {
-
-  var displayName = collectionName;
-  var slugName = _str.slugify(collectionName);
-  slugName = _str.capitalize(slugName);
-
-  res.render('model_template', {
-    modelName: displayName,
-    modelNameSlug: slugName,
-    modelNameDisplayName: displayName
-  },
-    function (err, html) {
-    fs.writeFile("models/" + collectionName + ".js",
-      function () {
-        return html;
-      }(),
-      function (err) {
-        if (err) {
-          console.log(err);
-        }
-        else {
-          if (typeof callback == "function")
-            callback();
-        }
-      }
-    )
-  })
-}
-
-//Please refactor!! =p
-updateSchema = function( collectionName, res, schema, callback) {
-
-  res.render('model_template_schema',{schema: schema }, function(err, html) {
-    fs.writeFile("models/" + collectionName + "_schema.js",
-      function() {
-        return html;
-      }(),
-      function (err)
-      {
-        if (err) {
-          console.log(err);
-        }
-        else {
-          callback();
-        }
-      }
-    )
-  })
-}
-
-removeModel = function removeModel(modelName) {
-  delete mongoose.models[modelName];
-  delete mongoose.modelSchemas[modelName];
-};
 
 module.exports = router;
