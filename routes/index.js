@@ -42,7 +42,6 @@ router.post('/create', function(req,res,next){
   )
 })
 
-
 router.post('/:collection', function(req,res,next) {
   var Model = getModel(req.params.collection);
 
@@ -165,6 +164,7 @@ createModel = function(collectionName, res, callback) {
 
   var displayName = collectionName;
   var slugName = _str.slugify(collectionName);
+  slugName = _str.capitalize(slugName);
 
   res.render('model_template', {
     modelName: displayName,
