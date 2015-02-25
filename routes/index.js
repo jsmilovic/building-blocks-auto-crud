@@ -40,12 +40,6 @@ router.post('/create', function(req,res,next){
   )
 })
 
-router.post('/:collection', function(req,res,next) {
-  var Model = controller.getModel(req.params.collection);
-
-  Model.create({'title': 'Jordan'});
-})
-
 router.get('/:collection', function(req, res, next) {
   var collection = controller.getModel(req.params.collection);
 
@@ -56,34 +50,6 @@ router.get('/:collection', function(req, res, next) {
     });
   });
 });
-
-router.get('/:collection/schema', function(req, res, next) {
-  var paths = mongoose.models[req.params.collection].schema.paths;
-  var fields = [];
-
-  for (p in paths) {
-    var name = paths[p].path;
-    fields.push({title: paths[p].path, type: paths[p].instance })
-  }
-
-  res.render(req.baseUrl.substr(1) + "collection_schema", {
-      "collection" : fields
-  });
-});
-
-router.delete('/:collection', function(req,res,next) {
-  var collection = req.params.collection;
-
-  controller.deleteModel(collection, function(err) {
-    if (err) {
-      res.end();
-    }
-    else {
-      controller.removeModel(collection);
-      res.end(JSON.stringify({"success": true, "status": 200}));
-    }
-  })
-})
 
 router.get('/:collection/:id', function(req, res, next) {
   var model = controller.getModel(req.params.collection);
@@ -100,6 +66,57 @@ router.get('/:collection/:id', function(req, res, next) {
       "schema": fields,
       "item" : item
     });
+  });
+});
+
+router.post('/:collection', function(req,res,next) {
+  var Model = controller.getModel(req.params.collection);
+
+  Model.create({'title': 'Jordan'});
+})
+
+router.delete('/:collection', function(req,res,next) {
+  var collection = req.params.collection;
+
+  controller.deleteModel(collection, function(err) {
+    if (err)
+    {
+      res.end();
+    }
+    else
+    {
+      controller.removeModel(collection);
+      res.end(JSON.stringify({"success": true, "status": 200}));
+    }
+  })
+})
+
+router.delete('/:collection/:id', function(req, res, next) {
+  var Model = controller.getModel(req.params.collection);
+  Model.remove({ _id: req.params.id}, function(err) {
+    if (err)
+    {
+      res.end(JSON.stringify({"success": false, "status": 200}));
+    }
+    else
+    {
+      res.end(JSON.stringify({"success": true, "status": 200}));
+    }
+  })
+
+})
+
+router.get('/:collection/schema', function(req, res, next) {
+  var paths = mongoose.models[req.params.collection].schema.paths;
+  var fields = [];
+
+  for (p in paths) {
+    var name = paths[p].path;
+    fields.push({title: paths[p].path, type: paths[p].instance })
+  }
+
+  res.render(req.baseUrl.substr(1) + "collection_schema", {
+      "collection" : fields
   });
 });
 
