@@ -4,23 +4,25 @@ var fs = require('fs');
 var mongoose = require('mongoose');
 var _str = require('underscore.string');
 
-module.exports.getModel = function (modelName) {
+var getModel = module.exports.getModel = function (modelName) {
+    modelName = _str.capitalize(modelName);
     return mongoose.model(modelName);
 }
 
-module.exports.findModelFilePath = function (modelName) {
+var findModelFilePath = module.exports.findModelFilePath = function (modelName) {
     return __base + 'models/' + modelName + '.js';
 }
 
-module.exports.findModelSchemaFilePath = function (modelName) {
+var findModelSchemaFilePath  = module.exports.findModelSchemaFilePath  = function (modelName) {
     return __base + 'models/' + modelName + '_Schema.js';
 }
 
 
-module.exports.updateSchema = function (collectionName, res, schema, callback) {
+var updateSchema = module.exports.updateSchema = function (modelName, res, schema, callback) {
 
+    modelName = _str.capitalize(modelName);
     res.render('model_template_schema', {schema: schema}, function (err, html) {
-        fs.writeFile("models/" + collectionName + "_schema.js",
+        fs.writeFile("models/" + modelName + "_schema.js",
             function () {
                 return html;
             }(),
@@ -36,15 +38,18 @@ module.exports.updateSchema = function (collectionName, res, schema, callback) {
     })
 }
 
-module.exports.removeModel = function removeModel(modelName) {
+var removeModel = module.exports.removeModel = function removeModel(modelName) {
+
+    modelName = _str.capitalize(modelName);
     delete mongoose.models[modelName];
     delete mongoose.modelSchemas[modelName];
 }
 
-module.exports.createModel = function (collectionName, res, callback) {
+var createModel = module.exports.createModel = function (modelName, res, callback) {
 
-    var displayName = collectionName;
-    var slugName = _str.slugify(collectionName);
+    modelName = _str.capitalize(modelName);
+    var displayName = modelName;
+    var slugName = _str.slugify(modelName);
     slugName = _str.capitalize(slugName);
 
     res.render('model_template', {
@@ -53,7 +58,7 @@ module.exports.createModel = function (collectionName, res, callback) {
             modelNameDisplayName: displayName
         },
         function (err, html) {
-            fs.writeFile("models/" + collectionName + ".js",
+            fs.writeFile("models/" + modelName + ".js",
                 function () {
                     return html;
                 }(),
@@ -68,4 +73,33 @@ module.exports.createModel = function (collectionName, res, callback) {
                 }
             )
         })
+}
+
+var deleteFile = function(filePath, cb) {
+    fs.unlink(filePath,
+        function(err) {
+            if(err) {
+                cb(err);
+            }
+            else {
+                cb();
+            }
+        }
+    );
+}
+
+var deleteModel = module.exports.deleteModel = function(modelName, cb) {
+
+    modelName = _str.capitalize(modelName);
+
+    deleteFile(findModelFilePath(modelName), function (err) {
+        if (err)
+        {
+
+        }
+        else
+        {
+            deleteFile(findModelSchemaFilePath(modelName), cb)
+        }
+    })
 }

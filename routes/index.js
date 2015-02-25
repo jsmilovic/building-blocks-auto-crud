@@ -3,7 +3,6 @@ var router = express.Router();
 var models = require(__base + 'models');
 var fs = require('fs');
 var mongoose = require('mongoose');
-var _str = require('underscore.string');
 var controller = require ('../controllers');
 
 router.get('/', function(req, res, next) {
@@ -24,8 +23,6 @@ router.get('/create', function(req,res,next) {
 })
 
 router.post('/create', function(req,res,next){
-
-  req.body.name = _str.capitalize(req.body.name);
 
   //Define schema for this new type
   controller.createModel(req.body.name, res,
@@ -75,20 +72,17 @@ router.get('/:collection/schema', function(req, res, next) {
 });
 
 router.delete('/:collection', function(req,res,next) {
-  var collection = _str.capitalize(req.params.collection);
-  var filePath = controller.findModelFilePath(collection);
+  var collection = req.params.collection;
 
-  fs.unlink(filePath,
-    function(err) {
-      controller.removeModel(collection);
-      if(err) {
-        res.end();
-      }
-      else {
-        res.end(JSON.stringify({"success" : true, "status" : 200}));
-      }
+  controller.deleteModel(collection, function(err) {
+    if (err) {
+      res.end();
     }
-  );
+    else {
+      controller.removeModel(collection);
+      res.end(JSON.stringify({"success": true, "status": 200}));
+    }
+  })
 })
 
 router.get('/:collection/:id', function(req, res, next) {
@@ -139,15 +133,10 @@ router.post('/:collection/schema', function(req,res,next) {
       }
     )
   })
-
-
 })
 
 router.delete('/:collection/schema/:objectId', function(req,res,next) {
-
   controller.findModelSchemaFilePath(req.params.collection);
-
 })
-
 
 module.exports = router;
